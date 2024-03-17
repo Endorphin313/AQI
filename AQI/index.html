@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>空气质量预测</title>
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            padding: 0;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;
+            height: 70px;
+            width: 100%;
+            background-color: #444A5A;
+            color: white;
+            align-items: center;
+            font-size: 20px;
+            padding-left: 25px;
+            font-weight: 600;
+        }
+
+        #main {
+            display: flex;
+            flex-grow: 1;
+            flex-direction: row; /* 子元素水平排列 */
+            height: 100vh; /* 容器高度设置为视窗的高度 */
+        }
+
+
+        #nav {
+            flex: 1; /* 导航栏和内容区域各占一半宽度 */
+            /*width: 200px;*/
+            background-color: #787f8c;
+            overflow-y: auto;
+        }
+
+        #nav ul {
+            margin: 0;
+            padding: 0;
+
+        }
+
+        #nav ul li {
+            /*width: 200px;*/
+            width: inherit;
+            color: white;
+            list-style: none;
+            border-bottom: 1px solid darkgrey;
+            align-items: center;
+            text-align: center;
+            margin-left: 0;
+            height: 50px;
+            justify-content: center;
+            /*display: flex;*/
+            font-weight: 600;
+        }
+
+        #nav ul li a {
+            width: inherit;
+            display: flex;
+            /*width: 200px;*/
+            text-decoration: none; /* 去掉下划线 */
+            color: inherit;
+            /*background-color: #007bff;*/
+            height: 50px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #nav ul li a.active {
+            /*border-bottom: 4px solid #444A5A; !* 在选中项的右侧显示一个绿色的选中标识条 *!*/
+            background-color: #555b72;
+        }
+
+        #nav ul li a:hover, #nav ul li a:active, #nav ul li a:visited {
+            color: inherit;
+        }
+
+
+        .content {
+            display: none;
+            margin: 20px;
+        }
+
+
+        #contentArea {
+            flex-grow: 1;
+            padding: 20px;
+            flex: 5;
+            overflow-y: auto;
+        }
+
+        .content.active {
+            display: block; /* 显示选中的内容 */
+        }
+
+        .text {
+            font-size: 17px;
+            line-height: 30px;
+        }
+
+        .img1 {
+            width: 800px;
+            margin-left: 100px;
+        }
+
+        .img2 {
+            width: 900px;
+            margin-left: 50px;
+        }
+
+        .img21 {
+            width: 450px;
+            margin-right: 50px;
+            margin-left: 30px;
+        }
+
+        .img22 {
+            width: 450px;
+        }
+
+        #dataTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #dataTable, #dataTable th, #dataTable td {
+            border: 1px solid black;
+        }
+
+        #dataTable th, #dataTable td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        #pagination {
+            margin-top: 20px;
+        }
+
+        .btn {
+            background-color: #5baaf3;
+            color: white;
+            border: 0;
+            border-radius: 18px;
+            width: 70px;
+            height: 30px;
+        }
+
+        .btn11 {
+            background-color: #5baaf3;
+            color: white;
+            border: 0;
+            width: 195px;
+            height: 50px;
+            font-size: 18px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .btn12 {
+            background-color: #30c5b5;
+            color: white;
+            border: 0;
+            width: 195px;
+            height: 50px;
+            font-size: 18px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        #dataTable_RNN {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #dataTable_RNN, #dataTable_RNN th, #dataTable_RNN td {
+            border: 1px solid black;
+        }
+
+        #dataTable_RNN th, #dataTable_RNN td {
+            padding: 8px;
+            text-align: left;
+        }
+
+
+        #dataTable_lstm {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #dataTable_lstm, #dataTable_lstm th, #dataTable_lstm td {
+            border: 1px solid black;
+        }
+
+        #dataTable_lstm th, #dataTable_lstm td {
+            padding: 8px;
+            text-align: left;
+        }
+
+
+        #dataTable_gru {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #dataTable_gru, #dataTable_gru th, #dataTable_gru td {
+            border: 1px solid black;
+        }
+
+        #dataTable_gru th, #dataTable_gru td {
+            padding: 8px;
+            text-align: left;
+        }
+
+    </style>
+</head>
+
+<body>
+<div class="header">
+    空气质量预测系统
+</div>
+<div id="main">
+    <!--    导航栏-->
+    <div id="nav">
+        <ul>
+            <li><a href="#" data-content="content1">数据分析</a></li>
+            <li><a href="#" data-content="content2">RNN</a></li>
+            <li><a href="#" data-content="content3">LSTM</a></li>
+            <li><a href="#" data-content="content4">GRU</a></li>
+            <li><a href="#" data-content="content5">查询</a></li>
+        </ul>
+    </div>
+
+    <div id="contentArea">
+        <!--        数据分析页-->
+        <div id="content1" class="content">
+            <p class="text"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;相关系数是衡量两个变量之间线性关系密切程度的统计指标，其值范围从-1到1。值接近1表示强正相关，即一个变量的增加通常与另一个变量的增加相伴随；值接近-1表示强负相关，即一个变量的增加通常伴随着另一个变量的减少；而值接近0则表示两变量之间几乎没有线性关系。</p>
+            <p class="text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;热力图则是通过颜色的深浅来直观展示这些相关系数，使得我们可以快速识别哪些污染物之间存在较强的相互关系。例如，PM2.5和PM10之间可能存在较强的正相关，因为它们都是颗粒物污染的一部分，通常来源相同，如交通排放、工业排放和自然源等。而像O3（臭氧）与其他污染物如NO2可能存在一定的负相关性，因为白天形成O3的光化学反应会消耗NO2。</p>
+            <p class="text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;通过分析这些相关系数和热力图，我们不仅可以理解不同污染物之间的关联性，还能对污染源和形成机理有更深的洞察。例如，如果发现某地区的SO2和PM2.5有很高的正相关性，可能表明该地区的空气污染与燃煤相关的工业活动有很大关联。这种分析对于环境政策制定、污染源识别和空气质量改善措施的制定具有重要意义。</p>
+            <img src="1.jpg" class="img1">
+        </div>
+
+        <!--        RNN-->
+        <div id="content2" class="content">
+            <img src="AQI_level.png" class="img2">
+            <div style="display: flex; margin-top: 30px; flex-wrap: wrap">
+                <img src="RNN.png" class="img21">
+                <div>
+                    <img src="../model1plot.png" class="img22" onclick="reload()">
+                    <ul style="margin-top: 20px; margin-left: 50px;">
+                        <li>均方误差MSE: 0.0006926965434104204</li>
+                        <li>决定系数R²: 0.9482603708463672</li>
+                        <li>准确率ACC: 0.9528825283050537</li>
+                        <li>平均绝对误差MAE: 0.015085012651979923</li>
+                    </ul>
+                </div>
+
+                <!-- 下拉框选择 -->
+                <select id="datasetSelector_RNN" onchange="loadSelectedDataset()"
+                        style="width: 180px; height: 50px; font-size: 18px; margin-top: 20px;">
+                    <option value="dataset1">武汉</option>
+                    <option value="dataset2">重庆</option>
+                    <option value="dataset3">四川</option>
+                    <option value="dataset4">上海</option>
+                </select>
+
+                <!-- 表格展示 -->
+                <table id="dataTable_RNN">
+                    <thead>
+                    <tr>
+                        <th>AQI</th>
+                        <th>level</th>
+                        <th>pm10</th>
+                        <th>pm2.5</th>
+                        <th>no2</th>
+                        <th>so2</th>
+                        <th>co</th>
+                        <th>o3</th>
+                        <th>pollutant</th>
+                        <th>time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 表格数据通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+                <div>
+                    <b>预测下一小时AQI为：</b><b id="aqi"></b>
+                    &nbsp;&nbsp;&nbsp;
+                    <b>对应空气质量等级：</b><b id="level"></b>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+        <!--        LSTM-->
+        <div id="content3" class="content">
+            <img src="AQI_level.png" class="img2">
+            <div style="display: flex; margin-top: 30px; flex-wrap: wrap">
+                <img src="LSTM.png" class="img21">
+                <div>
+                    <img src="../model2plot.png" class="img22" onclick="reload()">
+                    <ul style="margin-top: 20px; margin-left: 50px;">
+                        <li>均方误差MSE: 0.0004916806938126683</li>
+                        <li>决定系数R²: 0.9632748623444266</li>
+                        <li>准确率ACC: 0.9658231139183044</li>
+                        <li>平均绝对误差MAE: 0.012783762998878956</li>
+                    </ul>
+                </div>
+
+                <!-- 下拉框选择 -->
+                <select id="datasetSelector_lstm" onchange="loadSelectedDataset2()"
+                        style="width: 180px; height: 50px; font-size: 18px; margin-top: 20px;">
+                    <option value="dataset1">武汉</option>
+                    <option value="dataset2">重庆</option>
+                    <option value="dataset3">四川</option>
+                    <option value="dataset4">上海</option>
+                </select>
+
+                <!-- 表格展示 -->
+                <table id="dataTable_lstm">
+                    <thead>
+                    <tr>
+                        <th>AQI</th>
+                        <th>level</th>
+                        <th>pm10</th>
+                        <th>pm2.5</th>
+                        <th>no2</th>
+                        <th>so2</th>
+                        <th>co</th>
+                        <th>o3</th>
+                        <th>pollutant</th>
+                        <th>time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 表格数据通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+                <div>
+                    <b>预测下一小时AQI为：</b><b id="aqi2"></b>
+                    &nbsp;&nbsp;&nbsp;
+                    <b>对应空气质量等级：</b><b id="level2"></b>
+
+                </div>
+
+
+            </div>
+        </div>
+
+        <!--        GRU-->
+        <div id="content4" class="content">
+            <img src="AQI_level.png" class="img2">
+            <div style="display: flex; margin-top: 30px; flex-wrap: wrap">
+                <img src="GRU.png" class="img21">
+                <div>
+                    <img src="../model3plot.png" class="img22" onclick="reload()">
+                    <ul style="margin-top: 20px; margin-left: 50px;">
+                        <li>均方误差MSE: 0.00046032428508624434</li>
+                        <li>决定系数R²: 0.9656169660354147</li>
+                        <li>准确率ACC: 0.9661195278167725</li>
+                        <li>平均绝对误差MAE: 0.011167537420988083</li>
+                    </ul>
+                </div>
+
+                <!-- 下拉框选择 -->
+                <select id="datasetSelector_gru" onchange="loadSelectedDataset3()"
+                        style="width: 180px; height: 50px; font-size: 18px; margin-top: 20px;">
+                    <option value="dataset1">武汉</option>
+                    <option value="dataset2">重庆</option>
+                    <option value="dataset3">四川</option>
+                    <option value="dataset4">上海</option>
+                </select>
+
+                <!-- 表格展示 -->
+                <table id="dataTable_gru">
+                    <thead>
+                    <tr>
+                        <th>AQI</th>
+                        <th>level</th>
+                        <th>pm10</th>
+                        <th>pm2.5</th>
+                        <th>no2</th>
+                        <th>so2</th>
+                        <th>co</th>
+                        <th>o3</th>
+                        <th>pollutant</th>
+                        <th>time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 表格数据通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+                <div>
+                    <b>预测下一小时AQI为：</b><b id="aqi3"></b>
+                    &nbsp;&nbsp;&nbsp;
+                    <b>对应空气质量等级：</b><b id="level3"></b>
+
+                </div>
+
+
+            </div>
+        </div>
+
+        <!--        查询页-->
+        <div id="content5" class="content">
+            <div id="tableContainer">
+                <!-- 按钮选择 -->
+                <button onclick="renderTable()" class="btn11">实时空气质量排行</button>
+                <button onclick="renderTable_yes()" class="btn12">昨日空气质量排行</button>
+
+                <table id="dataTable">
+                    <thead>
+                    <tr>
+                        <th>地区</th>
+                        <th>AQI</th>
+                        <th>rank</th>
+                        <th>rate</th>
+                        <th>time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- 表格数据通过JavaScript填充 -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination">
+                <button onClick="changePage(-1)" class="btn">上一页</button>
+                <span id="pageInfo"></span>
+                <button onClick="changePage(1)" class="btn">下一页</button>
+                &nbsp;&nbsp;
+                <span id="pageAll"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 导航栏start--------------------------------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+        // 默认选中第一个导航项
+        var navItems = document.querySelectorAll('#nav ul li a');
+        navItems[0].classList.add('active');
+        document.getElementById(navItems[0].getAttribute('data-content')).classList.add('active');
+
+        // 为导航项添加点击事件
+        navItems.forEach(function (item) {
+            item.addEventListener('click', function (e) {
+                e.preventDefault(); // 阻止链接默认行为
+
+                // 更新导航项的选中状态
+                navItems.forEach(function (nav) {
+                    nav.classList.remove('active');
+                });
+                this.classList.add('active');
+
+                // 更新显示的内容
+                var selectedContentId = this.getAttribute('data-content');
+                document.querySelectorAll('.content').forEach(function (content) {
+                    content.classList.remove('active');
+                });
+                document.getElementById(selectedContentId).classList.add('active');
+            });
+        });
+    });
+    // 导航栏end-----------------------------------------
+
+    // 查询start-----------------------------------------
+
+
+    const rowsPerPage = 10;
+    let currentPage = 1
+
+    let data_inquire
+    let data_inquire2
+    let data_inquire1
+
+    function renderTable() {
+        if (!data_inquire2) {
+            Fetch('https://eolink.o.apispace.com/34324/air/v001/kqph')
+                .then(res => {
+                    data_inquire2 = res.result.realtimeRanks
+                    data_inquire = data_inquire2
+                })
+        }
+        data_inquire = data_inquire2
+        currentPage = 0
+        changePage(1)
+    }
+
+    function renderTable_yes() {
+        if (!data_inquire1) {
+            Fetch('https://eolink.o.apispace.com/34324/air/v001/airranking')
+                .then(res => {
+                    data_inquire1 = res.result.ranks
+                    data_inquire = data_inquire1
+                })
+        }
+        data_inquire = data_inquire1
+        currentPage = 0
+        changePage(1)
+    }
+
+    function changePage(direction) {
+        for (let i = 0; i < 10000000; i++) {
+            if (data_inquire) {
+                break
+            }
+        }
+
+        const nextPage = currentPage + direction;
+        const totalPages = Math.ceil(data_inquire.length / rowsPerPage);
+
+        if (nextPage > 0 && nextPage <= totalPages) {
+            currentPage = nextPage;
+            const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; // 清空当前表格内容
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            console.log(start, end)
+            console.log(data_inquire.slice(start, end))
+
+            data_inquire.slice(start, end).forEach(item => {
+                const row = tableBody.insertRow();
+                const areaCell = row.insertCell(0);
+                const aqiCell = row.insertCell(1);
+                const rankCell = row.insertCell(2);
+                const rateCell = row.insertCell(3);
+                const timeCell = row.insertCell(4);
+
+                if (item.hourlyRanking) {
+                    areaCell.textContent = item.location.path;
+                    aqiCell.textContent = item.hourlyRanking.aqi;
+                    rankCell.textContent = item.hourlyRanking.aqi_ranking;
+                    rateCell.textContent = item.hourlyRanking.beat_rate;
+                    timeCell.textContent = item.hourlyRanking.data_time;
+                } else {
+                    areaCell.textContent = item.location.path;
+                    aqiCell.textContent = item.dailyRanking.aqi_ave;
+                    rankCell.textContent = item.dailyRanking.aqi_ranking;
+                    rateCell.textContent = item.dailyRanking.beat_rate;
+                    timeCell.textContent = item.dailyRanking.data_time;
+                }
+            });
+            // 更新页数信息
+            updatePageInfo();
+            // renderTable(currentPage);
+        }
+    }
+
+    function updatePageInfo() {
+        // let currentPage = 1;
+        const totalPages = Math.ceil(data_inquire.length / rowsPerPage);
+        document.getElementById('pageInfo').textContent = `第 ${currentPage} 页`;
+        document.getElementById('pageAll').textContent = `共 ${totalPages} 页`;
+    }
+
+
+    // 页面加载完毕后，默认显示第一个按钮对应的内容
+    window.onload = function () {
+        renderTable(currentPage);
+        for (let i = 0; i < 100000; i++) {
+            if (data_inquire) {
+                break
+            }
+        }
+        currentPage = 0
+        changePage(1)
+    }
+    // 查询end-----------------------------------------
+
+
+    // RNN start-----------------------------------------
+
+
+    function loadSelectedDataset() {
+
+        // const selectedDataset = document.getElementById('datasetSelector_RNN').value;
+
+        Fetch('https://eolink.o.apispace.com/34324/air/v001/pastaqi?areacode=101200101')
+            .then(res => {
+                const data = res.result.aqis
+
+                const tableBody = document.getElementById('dataTable_RNN').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = ''; // 清空表格
+
+                // 填充表格
+                data.forEach(item => {
+                    const row = tableBody.insertRow();
+                    const aqiCell = row.insertCell(0);
+                    const levelCell = row.insertCell(1);
+                    const pm1Cell = row.insertCell(2);
+                    const pm2Cell = row.insertCell(3);
+                    const noCell = row.insertCell(4);
+                    const soCell = row.insertCell(5);
+                    const coCell = row.insertCell(6);
+                    const oCell = row.insertCell(7);
+                    const pCell = row.insertCell(8);
+                    const tCell = row.insertCell(9);
+
+                    aqiCell.textContent = item.aqi;
+                    levelCell.textContent = item.aqi_level;
+                    pm1Cell.textContent = item.pm10;
+                    pm2Cell.textContent = item.pm25;
+                    noCell.textContent = item.no2;
+                    soCell.textContent = item.so2;
+                    coCell.textContent = item.co;
+                    oCell.textContent = item.o3;
+                    pCell.textContent = item.pollutant;
+                    tCell.textContent = item.data_time;
+                });
+            })
+
+
+    }
+
+    // 初始加载
+    document.addEventListener('DOMContentLoaded', loadSelectedDataset);
+
+    function predictAQI(model) {
+        const predictAqi = document.getElementById('aqi');
+        const predictLevel = document.getElementById('level');
+        Fetch('http://127.0.0.1:5000/digital?model='+model)
+            .then(res => {
+                console.log(res)
+                predictAqi.innerHTML = res.received;
+                predictLevel.innerHTML = res.level;
+            })
+    }
+
+    // RNN end-----------------------------------------
+
+ // lstm start-----------------------------------------
+
+    function loadSelectedDataset2() {
+
+        // const selectedDataset = document.getElementById('datasetSelector_RNN').value;
+
+        Fetch('https://eolink.o.apispace.com/34324/air/v001/pastaqi?areacode=101200101')
+            .then(res => {
+                const data = res.result.aqis
+
+                const tableBody = document.getElementById('dataTable_lstm').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = ''; // 清空表格
+
+                // 填充表格
+                data.forEach(item => {
+                    const row = tableBody.insertRow();
+                    const aqiCell = row.insertCell(0);
+                    const levelCell = row.insertCell(1);
+                    const pm1Cell = row.insertCell(2);
+                    const pm2Cell = row.insertCell(3);
+                    const noCell = row.insertCell(4);
+                    const soCell = row.insertCell(5);
+                    const coCell = row.insertCell(6);
+                    const oCell = row.insertCell(7);
+                    const pCell = row.insertCell(8);
+                    const tCell = row.insertCell(9);
+
+                    aqiCell.textContent = item.aqi;
+                    levelCell.textContent = item.aqi_level;
+                    pm1Cell.textContent = item.pm10;
+                    pm2Cell.textContent = item.pm25;
+                    noCell.textContent = item.no2;
+                    soCell.textContent = item.so2;
+                    coCell.textContent = item.co;
+                    oCell.textContent = item.o3;
+                    pCell.textContent = item.pollutant;
+                    tCell.textContent = item.data_time;
+                });
+            })
+
+
+    }
+
+        // 初始加载
+    document.addEventListener('DOMContentLoaded', loadSelectedDataset2);
+
+    function predictAQI2(model) {
+        const predictAqi = document.getElementById('aqi2');
+        const predictLevel = document.getElementById('level2');
+        Fetch('http://127.0.0.1:5000/digital?model='+model)
+            .then(res => {
+                console.log(res)
+                predictAqi.innerHTML = res.received;
+                predictLevel.innerHTML = res.level;
+            })
+    }
+     // lstm end-----------------------------------------
+
+
+         // gru start-----------------------------------------
+
+    function loadSelectedDataset3() {
+
+        // const selectedDataset = document.getElementById('datasetSelector_RNN').value;
+
+        Fetch('https://eolink.o.apispace.com/34324/air/v001/pastaqi?areacode=101200101')
+            .then(res => {
+                const data = res.result.aqis
+
+                const tableBody = document.getElementById('dataTable_gru').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = ''; // 清空表格
+
+                // 填充表格
+                data.forEach(item => {
+                    const row = tableBody.insertRow();
+                    const aqiCell = row.insertCell(0);
+                    const levelCell = row.insertCell(1);
+                    const pm1Cell = row.insertCell(2);
+                    const pm2Cell = row.insertCell(3);
+                    const noCell = row.insertCell(4);
+                    const soCell = row.insertCell(5);
+                    const coCell = row.insertCell(6);
+                    const oCell = row.insertCell(7);
+                    const pCell = row.insertCell(8);
+                    const tCell = row.insertCell(9);
+
+                    aqiCell.textContent = item.aqi;
+                    levelCell.textContent = item.aqi_level;
+                    pm1Cell.textContent = item.pm10;
+                    pm2Cell.textContent = item.pm25;
+                    noCell.textContent = item.no2;
+                    soCell.textContent = item.so2;
+                    coCell.textContent = item.co;
+                    oCell.textContent = item.o3;
+                    pCell.textContent = item.pollutant;
+                    tCell.textContent = item.data_time;
+                });
+            })
+
+
+    }
+
+        // 初始加载
+    document.addEventListener('DOMContentLoaded', loadSelectedDataset3);
+
+function predictAQI3(model) {
+        const predictAqi = document.getElementById('aqi3');
+        const predictLevel = document.getElementById('level3');
+        Fetch('http://127.0.0.1:5000/digital?model='+model)
+            .then(res => {
+                console.log(res)
+                predictAqi.innerHTML = res.received;
+                predictLevel.innerHTML = res.level;
+            })
+    }
+         // gru end-----------------------------------------
+
+    // function predictLevel() {
+    //     Fetch('https://eolink.o.apispace.com/34324/air/v001/pastaqi?areacode=101200101')
+    //         .then(res => {
+    //         })
+    //
+    //     // predictaqi.innerHTML = res;
+    // }
+
+    predictAQI("model1")
+    predictAQI2("model2")
+    predictAQI3("model3")
+    Fetch(1)
+    Fetch(2)
+    Fetch(3)
+    // predictLevel()
+
+    async function Fetch(path) {
+        return await fetch(path, {
+            method: 'GET',
+            headers: {
+                'X-APISpace-Token': 'pj4qjwd7umjrukymjwx53fbm4zm0ogh0'
+            },
+        }).then(res => {
+            return res.json()
+        })
+    }
+
+</script>
+
+
+</body>
+</html>
+

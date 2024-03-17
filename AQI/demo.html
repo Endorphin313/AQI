@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>空气质量预测</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+
+    #dataTable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #dataTable, #dataTable th, #dataTable td {
+      border: 1px solid black;
+    }
+
+    #dataTable th, #dataTable td {
+      padding: 8px;
+      text-align: left;
+    }
+
+    #pagination {
+      margin-top: 20px;
+    }
+
+
+  </style>
+</head>
+<body>
+<div id="tableContainer">
+  <table id="dataTable">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Age</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 表格数据将通过JavaScript填充 -->
+    </tbody>
+  </table>
+</div>
+<div id="pagination">
+  <button onclick="changePage(-1)">上一页</button>
+  <button onclick="changePage(1)">下一页</button>
+</div>
+
+
+<script>
+  // 模拟的表格数据
+  const data = Array.from({ length: 50 }, (_, i) => ({
+    id: i + 1,
+    name: `Person ${i + 1}`,
+    age: Math.floor(Math.random() * 30) + 20,
+  }));
+
+  let currentPage = 1;
+  const rowsPerPage = 10;
+
+  function renderTable(page) {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const paginatedItems = data.slice(start, end);
+    console.log(paginatedItems)
+    const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+    tableBody.innerHTML = ''; // 清空当前表格内容
+
+    paginatedItems.forEach(item => {
+      const row = tableBody.insertRow();
+      const idCell = row.insertCell(0);
+      const nameCell = row.insertCell(1);
+      const ageCell = row.insertCell(2);
+
+      idCell.textContent = item.id;
+      nameCell.textContent = item.name;
+      ageCell.textContent = item.age;
+    });
+
+    // 更新页数信息
+    updatePageInfo();
+  }
+
+  function changePage(direction) {
+    const nextPage = currentPage + direction;
+    const totalPages = Math.ceil(data.length / rowsPerPage);
+
+    if (nextPage > 0 && nextPage <= totalPages) {
+      currentPage = nextPage;
+      renderTable(currentPage);
+    }
+  }
+
+  function updatePageInfo() {
+    const totalPages = Math.ceil(data.length / rowsPerPage);
+    document.getElementById('pageInfo').textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+  }
+
+  // 初始化表格
+  renderTable(currentPage);
+
+
+</script>
+
+</body>
+</html>
